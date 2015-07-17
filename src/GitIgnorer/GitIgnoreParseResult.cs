@@ -4,10 +4,11 @@ namespace GitIgnorer
 {
     public class GitIgnoreParseResult
     {
-        public IEnumerable<GitIgnorePattern> Patterns { get; private set; }
+        public IList<GitIgnorePattern> Patterns { get; private set; }
 
         internal GitIgnoreParseResult()
         {
+            Patterns = new List<GitIgnorePattern>();
         }
     }
 }
