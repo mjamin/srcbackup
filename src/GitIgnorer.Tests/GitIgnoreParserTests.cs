@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Linq;
 using Xunit;
 
 namespace GitIgnorer.Tests
@@ -8,79 +8,192 @@ namespace GitIgnorer.Tests
         [Fact]
         void ShouldIgnoreBlankLines()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("\n");
+
+            // Assert
+            Assert.True(!result.Patterns.Any());
         }
 
         [Fact]
         void ShouldIgnoreLinesStartingWithHash()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("#comment\n");
+
+            // Assert
+            Assert.True(!result.Patterns.Any());
         }
 
         [Fact]
         void ShouldNotIgnoreLinesStartingWithEscapedHash()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("\\#nocomment\n");
+
+            // Assert
+            Assert.Equal(result.Patterns.Count(), 1);
+        }
+
+        [Fact]
+        void ShouldTrimLines()
+        {
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse(" foo ");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo");
         }
 
         [Fact]
         void ShouldNotTrimEscapedTrailingSpaces()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("foo\\ ");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo ");
         }
 
         [Fact]
         void ShouldNegatePatternsStartingWithExclamationMark()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("!foo");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.Negated));
         }
 
         [Fact]
-        void ShouldNegatePatternsStartingWithEscapedExclamationMark()
+        void ShouldNotNegatePatternsStartingWithEscapedExclamationMark()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("\\!important!.txt");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "!important!.txt");
         }
 
         [Fact]
         void ShouldOnlyMatchDirectoriesIfPatternEndsWithSlash()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("foo/");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchDirectory));
+            Assert.False(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchFile));
         }
 
         [Fact]
         void ShouldCheckForMatchInPathRelativeToGitIgnoreIfPatternDoesNotContainSlash()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("foo");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchPathNameRelative));
         }
 
         [Fact]
         void ShouldNotMatchSlashesThroughWildcardsIfPatternContainsSlash()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("foo/*bar");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo/*bar");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.WildcardsDoNotMatchSlashes));
         }
 
         [Fact]
         void ShouldTreatLeadingSlashAsBeginningOfPath()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("/*.c");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "*.c");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.Rooted));
         }
 
         [Fact]
         void ShouldTreatLeadingDoubleAsteriskFollowedBySlashAsMatchForAllDirectories()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("**/foo");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchInAllDirectories));
         }
 
         [Fact]
         void ShouldTreatTrailingSlashFollowedByDoubleAsteriskAsMatchForAllFilesWithin()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("abc/**");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "abc");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchInsideDirectory));
         }
 
         [Fact]
-        void ShouldTreatSlashFollowedByByDoubleAsteriskFollowedBySlashAsMatchForZeroOrMoreDirectories()
+        void ShouldTreatSlashFollowedByDoubleAsteriskFollowedBySlashAsMatchForZeroOrMoreDirectories()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var parser = new GitIgnoreParser();
+
+            // Act
+            var result = parser.Parse("a/**/b");
+
+            // Assert
+            Assert.Equal(result.Patterns.Single().Pattern, "a/**/b");
+            Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchZeroOrMoreDirectories));
         }
     }
 }
