@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Xunit;
 
 namespace GitIgnorer.Tests
@@ -55,7 +56,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse(" foo ");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.Equal("foo", result.Patterns.Single().Pattern);
         }
 
         [Fact]
@@ -68,7 +69,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("foo\\ ");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "foo ");
+            Assert.Equal("foo ", result.Patterns.Single().Pattern);
         }
 
         [Fact]
@@ -95,7 +96,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("\\!important!.txt");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "!important!.txt");
+            Assert.Equal("!important!.txt", result.Patterns.Single().Pattern);
         }
 
         [Fact]
@@ -108,7 +109,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("foo/");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.Equal("foo", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchDirectory));
             Assert.False(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchFile));
         }
@@ -123,7 +124,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("foo");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.Equal("foo", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchPathNameRelative));
         }
 
@@ -137,7 +138,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("foo/*bar");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "foo/*bar");
+            Assert.Equal("foo/*bar", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.WildcardsDoNotMatchSlashes));
         }
 
@@ -151,7 +152,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("/*.c");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "*.c");
+            Assert.Equal("*.c", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.Rooted));
         }
 
@@ -165,7 +166,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("**/foo");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "foo");
+            Assert.Equal("foo", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchInAllDirectories));
         }
 
@@ -179,7 +180,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("abc/**");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "abc");
+            Assert.Equal("abc", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchInsideDirectory));
         }
 
@@ -193,7 +194,7 @@ namespace GitIgnorer.Tests
             var result = parser.Parse("a/**/b");
 
             // Assert
-            Assert.Equal(result.Patterns.Single().Pattern, "a/**/b");
+            Assert.Equal("a/**/b", result.Patterns.Single().Pattern);
             Assert.True(result.Patterns.Single().Flags.HasFlag(PatternFlags.MatchZeroOrMoreDirectories));
         }
     }
