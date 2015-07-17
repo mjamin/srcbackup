@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace GitIgnorer
 {
     public class GitIgnoreParseResult
     {
-        public GitIgnoreParseResult()
+        public IEnumerable<GitIgnorePattern> Patterns { get; private set; }
+
+        internal GitIgnoreParseResult()
         {
         }
     }

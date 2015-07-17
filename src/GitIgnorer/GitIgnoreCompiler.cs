@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GitIgnorer
 {
-    public class GitIgnoreCompiler
+    public class GitIgnoreCompiler : IGitIgnoreCompiler
     {
-        public GitIgnoreCompiler()
+        private readonly IGitIgnoreParser _parser;
+
+        public GitIgnoreCompiler(IGitIgnoreParser parser)
         {
+            _parser = parser;
         }
 
-        public GitIgnore Compile(GitIgnoreParseResult result)
+        public GitIgnore Compile(string fileName)
         {
             throw new NotImplementedException();
         }
