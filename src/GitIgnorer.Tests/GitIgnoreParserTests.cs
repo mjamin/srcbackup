@@ -12,7 +12,7 @@ namespace GitIgnorer.Tests
             var parser = new GitIgnoreParser();
 
             // Act
-            var result = parser.Parse("\n");
+            var result = parser.Parse(Environment.NewLine);
 
             // Assert
             Assert.True(!result.Patterns.Any());
@@ -25,7 +25,7 @@ namespace GitIgnorer.Tests
             var parser = new GitIgnoreParser();
 
             // Act
-            var result = parser.Parse("#comment\n");
+            var result = parser.Parse("#comment");
 
             // Assert
             Assert.True(!result.Patterns.Any());
@@ -38,10 +38,11 @@ namespace GitIgnorer.Tests
             var parser = new GitIgnoreParser();
 
             // Act
-            var result = parser.Parse("\\#nocomment\n");
+            var result = parser.Parse("\\#nocomment");
 
             // Assert
             Assert.Equal(result.Patterns.Count(), 1);
+            Assert.Equal("#nocomment", result.Patterns.Single().Pattern);
         }
 
         [Fact]
