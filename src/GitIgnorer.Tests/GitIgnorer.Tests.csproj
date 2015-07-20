@@ -50,6 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GitIgnoreCompilerTests.cs" />
     <Compile Include="GitIgnoreParserTests.cs">
       <SubType>Code</SubType>
     </Compile>
