@@ -51,6 +51,7 @@ namespace GitIgnorer
         private static string PrepareRegex(GitIgnorePattern pattern)
         {
             return Regex.Escape(pattern.Pattern)
+                .Replace("\\[", "[")
                 .Replace("/\\*\\*/", "((/.*?/)|/)")
                 .Replace("\\\\", "(\\\\|/)")
                 .Replace("/", "(\\\\|/)")
