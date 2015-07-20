@@ -3,7 +3,7 @@
 namespace GitIgnorer
 {
     [Flags]
-    public enum PatternFlags
+    internal enum PatternFlags
     {
         None = 0,
         Negated = 1,

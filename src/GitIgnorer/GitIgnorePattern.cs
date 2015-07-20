@@ -1,6 +1,6 @@
 ﻿namespace GitIgnorer
 {
-    public class GitIgnorePattern
+    internal class GitIgnorePattern
     {
         public string Pattern { get; private set; }
         public PatternFlags Flags { get; private set; }

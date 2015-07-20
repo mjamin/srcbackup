@@ -48,7 +48,6 @@
     <Compile Include="GitIgnoreParseResult.cs" />
     <Compile Include="GitIgnorePattern.cs" />
     <Compile Include="IGitIgnoreCompiler.cs" />
-    <Compile Include="IGitIgnoreParser.cs" />
     <Compile Include="PatternFlags.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

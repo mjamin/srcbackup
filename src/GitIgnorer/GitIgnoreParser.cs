@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace GitIgnorer
 {
-    public class GitIgnoreParser : IGitIgnoreParser
+    internal class GitIgnoreParser
     {
         private const string RegexPatternTrimWhitespace = @"^\s+|((?<!\\)\s)+$";
 

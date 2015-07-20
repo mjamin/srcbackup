@@ -9,7 +9,7 @@ namespace GitIgnorer
         private readonly IFileSystem _fileSystem;
         private readonly IGitIgnoreParser _parser;
 
-        public GitIgnoreCompiler(IFileSystem fileSystem, IGitIgnoreParser parser)
+        public GitIgnoreCompiler(IFileSystem fileSystem)
         {
             _fileSystem = fileSystem;
             _parser = parser;

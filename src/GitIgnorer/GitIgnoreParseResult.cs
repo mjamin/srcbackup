@@ -2,7 +2,7 @@
 
 namespace GitIgnorer
 {
-    public class GitIgnoreParseResult
+    internal class GitIgnoreParseResult
     {
         public IList<GitIgnorePattern> Patterns { get; private set; }
 
