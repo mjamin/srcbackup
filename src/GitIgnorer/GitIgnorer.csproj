@@ -45,7 +45,6 @@
     <Compile Include="GitIgnore.cs" />
     <Compile Include="GitIgnoreCompiler.cs" />
     <Compile Include="GitIgnoreParser.cs" />
-    <Compile Include="GitIgnoreParseResult.cs" />
     <Compile Include="GitIgnorePattern.cs" />
     <Compile Include="IGitIgnoreCompiler.cs" />
     <Compile Include="PatternFlags.cs" />

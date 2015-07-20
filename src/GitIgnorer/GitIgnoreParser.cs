@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace GitIgnorer
@@ -7,20 +9,11 @@ namespace GitIgnorer
     {
         private const string RegexPatternTrimWhitespace = @"^\s+|((?<!\\)\s)+$";
 
-        public GitIgnoreParseResult Parse(string contents)
+        public IEnumerable<GitIgnorePattern> Parse(string contents)
         {
-            var result = new GitIgnoreParseResult();
-
-            foreach (var line in contents.Split(new [] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                var pattern = ParseLine(line);
-                if (pattern != null)
-                {
-                    result.Patterns.Add(pattern);
-                }
-            }
-
-            return result;
+            return contents.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+                .Select(ParseLine)
+                .Where(pattern => pattern != null);
         }
 
         private static GitIgnorePattern ParseLine(string line)
@@ -78,11 +71,7 @@ namespace GitIgnorer
             {
                 flags = flags | PatternFlags.MatchZeroOrMoreDirectories;
             }
-            else if (!line.Contains("/"))
-            {
-                flags = flags | PatternFlags.MatchPathNameRelative;
-            }
-            else
+            else if (line.Contains("/"))
             {
                 flags = flags | PatternFlags.WildcardsDoNotMatchSlashes;
             }
