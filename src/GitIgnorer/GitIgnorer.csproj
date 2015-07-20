@@ -43,11 +43,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GitIgnore.cs" />
+    <Compile Include="GitIgnoreCompiledPattern.cs" />
     <Compile Include="GitIgnoreCompiler.cs" />
     <Compile Include="GitIgnoreParser.cs" />
     <Compile Include="GitIgnorePattern.cs" />
     <Compile Include="IGitIgnoreCompiler.cs" />
     <Compile Include="PatternFlags.cs" />
+    <Compile Include="PatternTarget.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

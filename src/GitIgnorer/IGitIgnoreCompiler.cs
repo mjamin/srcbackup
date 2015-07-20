@@ -2,6 +2,6 @@
 {
     public interface IGitIgnoreCompiler
     {
-        GitIgnore Compile(string fileName);
+        GitIgnore Compile(string filePath);
     }
 }
