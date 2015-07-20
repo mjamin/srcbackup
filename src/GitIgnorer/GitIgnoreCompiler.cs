@@ -45,7 +45,9 @@ namespace GitIgnorer
                     excludes.Add(compiledPattern);
             }
 
-            return new GitIgnore(_fileSystem.Path.GetDirectoryName(filePath), _fileSystem, excludes, includes);
+            var rootPath = _fileSystem.Path.GetDirectoryName(filePath).TrimEnd('\\', '/') + '\\';
+
+            return new GitIgnore(rootPath, _fileSystem, excludes, includes);
         }
 
         private static string PrepareRegex(GitIgnorePattern pattern)

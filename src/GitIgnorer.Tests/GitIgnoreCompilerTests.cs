@@ -92,8 +92,7 @@ namespace GitIgnorer.Tests
             // Arrange
             var fileSystem = new MockFileSystem()
                 .WithGitIgnoreContaining("foo/")
-                .WithDirectory(@"C:\foo\bar")
-                .WithFile(@"C:\bar\foo");
+                .WithDirectory(@"C:\foo\bar");
 
             var compiler = new GitIgnoreCompiler(fileSystem);
 
@@ -103,6 +102,22 @@ namespace GitIgnorer.Tests
             // Assert
             Assert.True(result.Ignores(@"C:\foo"));
             Assert.True(result.Ignores(@"C:\foo\bar"));
+        }
+
+        [Fact]
+        public void ShouldNotIgnoreFilesNamedLikeIgnoredDirectories()
+        {
+            // Arrange
+            var fileSystem = new MockFileSystem()
+                .WithGitIgnoreContaining("foo/")
+                .WithFile(@"C:\bar\foo");
+
+            var compiler = new GitIgnoreCompiler(fileSystem);
+
+            // Act
+            var result = compiler.Compile(@"C:\.gitignore");
+
+            // Assert
             Assert.False(result.Ignores(@"C:\bar\foo"));
         }
 

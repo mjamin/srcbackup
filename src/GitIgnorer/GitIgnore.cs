@@ -29,14 +29,26 @@ namespace GitIgnorer
 
         private bool Matches(GitIgnoreCompiledPattern pattern, string path)
         {
-            var relativePath = path.Replace(_rootPath, "");
+            for (var i = _rootPath.Length; i <= path.Length - 1; i++)
+            {
+                var currentPath = path.Substring(_rootPath.Length, i - _rootPath.Length + 1);
 
-            if (!pattern.Regex.Match(relativePath).Success)
-                return false;
+                if ((i == path.Length - 1 || (path[i] == '\\' || path[i] == '/')) && pattern.Regex.Match(currentPath).Success)
+                {
+                    if (pattern.Target == PatternTarget.Directory)
+                    {
+                        if (_fileSystem.Directory.Exists(_fileSystem.Path.Combine(_rootPath, currentPath)))
+                            return true;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
 
-            return pattern.Target == PatternTarget.FileOrDirectory
-                || pattern.Target == PatternTarget.File && _fileSystem.File.Exists(path)
-                || pattern.Target == PatternTarget.Directory && _fileSystem.Directory.Exists(path);
+            }
+
+            return false;
         }
     }
 }
