@@ -23,9 +23,9 @@ namespace GitIgnorer
             return result;
         }
 
-        private GitIgnorePattern ParseLine(string line)
+        private static GitIgnorePattern ParseLine(string line)
         {
-            var flags = PatternFlags.None;
+            var flags = PatternFlags.MatchFile | PatternFlags.MatchDirectory;
 
             if (String.IsNullOrEmpty(line))
             {
@@ -66,7 +66,7 @@ namespace GitIgnorer
 
             if (line[line.Length - 1] == '/')
             {
-                flags = flags | PatternFlags.MatchDirectory;
+                flags = flags & ~PatternFlags.MatchFile;
                 line = line.TrimEnd('/');
             }
             else if (line.EndsWith("/**"))
