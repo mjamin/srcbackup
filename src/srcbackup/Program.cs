@@ -11,45 +11,72 @@ namespace srcbackup
 {
     public class Program
     {
+        private static FileSystem FileSystem = new FileSystem();
+        private static GitIgnoreCompiler GitIgnoreCompiler = new GitIgnoreCompiler(FileSystem);
+
         public static void Main(string[] args)
         {
             if (args.Length != 2)
             {
-                Console.WriteLine("usage: srcbackup.exe <source-directory> <output-zip-file>");
+                Console.WriteLine("Usage: srcbackup.exe <source-directory> <output-zip-file>");
                 return;
             }
 
             var rootPath = args[0].TrimEnd('\\', '/') + '\\';
             var zipPath = args[1];
+            var files = GetFiles(rootPath, null);
 
-            var gitIgnore = new GitIgnoreCompiler(new FileSystem()).Compile(Path.Combine(rootPath, ".gitignore"));
-            var files = GetFiles(rootPath, f => !gitIgnore.Ignores(f), d => !d.EndsWith(".git") && !gitIgnore.Ignores(d));
+            var outputDirectory = Path.GetDirectoryName(zipPath);
+            if(!string.IsNullOrEmpty(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
 
-            CreateZipArchive(files, rootPath, zipPath);
+            var n = CreateZipArchive(files, rootPath, zipPath);
+
+            Console.WriteLine("{0} files written to {1}.", n, zipPath);
         }
 
-        private static IEnumerable<string> GetFiles(string path, Func<string, bool> filePredicate, Func<string, bool> directoryPredicate)
+        private static IEnumerable<string> GetFiles(string directory, GitIgnore gitIgnore)
         {
-            foreach (var file in Directory.GetFiles(path)
-                                          .Where(filePredicate))
+            var gitIgnorePath = Path.Combine(directory, ".gitignore");
+            if (File.Exists(gitIgnorePath))
+            {
+                gitIgnore = gitIgnore == null
+                    ? GitIgnoreCompiler.Compile(gitIgnorePath)
+                    : gitIgnore + GitIgnoreCompiler.Compile(gitIgnorePath);
+            }
+
+            var files = gitIgnore == null
+                ? Directory.GetFiles(directory)
+                : Directory.GetFiles(directory).Where(f => !gitIgnore.Ignores(f));
+
+            foreach (var file in files)
             {
                 yield return file;
             }
 
-            foreach (var file in Directory.GetDirectories(path)
-                                          .Where(directoryPredicate)
-                                          .SelectMany(directory => GetFiles(directory, filePredicate, directoryPredicate)))
+            var directories = gitIgnore == null
+                ? Directory.GetDirectories(directory)
+                : Directory.GetDirectories(directory).Where(d => !d.EndsWith(".git") && !gitIgnore.Ignores(d));
+
+            foreach (var file in directories.SelectMany(d => GetFiles(d, gitIgnore)))
             {
                 yield return file;
             }
         }
 
-        private static void CreateZipArchive(IEnumerable<string> files, string rootPath, string outputPath)
+        private static int CreateZipArchive(IEnumerable<string> files, string rootPath, string outputPath)
         {
+            var n = 0;
+
             using (var archive = new ZipArchive(new FileStream(outputPath, FileMode.Create), ZipArchiveMode.Create, false, Encoding.GetEncoding(850)))
             {
                 foreach (var file in files)
                 {
+                    if (file == outputPath)
+                        continue;
+
                     var entry = archive.CreateEntry(file.Replace(rootPath, ""));
                     using (var stream = entry.Open())
                     {
@@ -58,8 +85,12 @@ namespace srcbackup
                             dataStream.CopyTo(stream);
                         }
                     }
+
+                    n++;
                 }
             }
+
+            return n;
         }
     }
 }

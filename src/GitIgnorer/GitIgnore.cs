@@ -1,19 +1,18 @@
 ﻿using System.IO.Abstractions;
 using System.Linq;
 using System.Collections.Generic;
+using System;
 
 namespace GitIgnorer
 {
     public class GitIgnore
     {
-        private readonly string _rootPath;
         private readonly IFileSystem _fileSystem;
-        private readonly IEnumerable<GitIgnoreCompiledPattern> _excludes;
-        private readonly IEnumerable<GitIgnoreCompiledPattern> _includes;
+        private readonly Dictionary<string, IEnumerable<GitIgnoreCompiledPattern>> _excludes;
+        private readonly Dictionary<string, IEnumerable<GitIgnoreCompiledPattern>> _includes;
 
-        internal GitIgnore(string rootPath, IFileSystem fileSystem, IEnumerable<GitIgnoreCompiledPattern> excludes, IEnumerable<GitIgnoreCompiledPattern> includes)
+        internal GitIgnore(IFileSystem fileSystem, Dictionary<string, IEnumerable<GitIgnoreCompiledPattern>> excludes, Dictionary<string, IEnumerable<GitIgnoreCompiledPattern>> includes)
         {
-            _rootPath = rootPath;
             _fileSystem = fileSystem;
             _excludes = excludes;
             _includes = includes;
@@ -24,20 +23,56 @@ namespace GitIgnorer
             if (!_excludes.Any())
                 return false;
 
-            return _excludes.Any(r => Matches(r, path)) && !_includes.Any(r => Matches(r, path));
+            foreach(var exclude in _excludes)
+            {
+                if (exclude.Value.Any(e => Matches(e, exclude.Key, path)))
+                {
+                    foreach(var include in _includes)
+                    {
+                        if (include.Value.Any(i => Matches(i, include.Key, path)))
+                            return false;
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        private bool Matches(GitIgnoreCompiledPattern pattern, string path)
+        public static GitIgnore operator +(GitIgnore c1, GitIgnore c2)
         {
-            for (var i = _rootPath.Length; i <= path.Length - 1; i++)
+            var excludes = new Dictionary<string, IEnumerable<GitIgnoreCompiledPattern>>(c1._excludes);
+            foreach(var e in c2._excludes)
             {
-                var currentPath = path.Substring(_rootPath.Length, i - _rootPath.Length + 1);
+                excludes.Add(e.Key, e.Value);
+            }
+
+            var includes = new Dictionary<string, IEnumerable<GitIgnoreCompiledPattern>>(c1._includes);
+            foreach (var e in c2._includes)
+            {
+                includes.Add(e.Key, e.Value);
+            }
+
+            if(c1._fileSystem != c2._fileSystem)
+            {
+                throw new NotSupportedException();
+            }
+
+            return new GitIgnore(c1._fileSystem, excludes, includes);
+        }
+
+        private bool Matches(GitIgnoreCompiledPattern pattern, string rootPath, string path)
+        {
+            for (var i = rootPath.Length; i <= path.Length - 1; i++)
+            {
+                var currentPath = path.Substring(rootPath.Length, i - rootPath.Length + 1);
 
                 if ((i == path.Length - 1 || (path[i] == '\\' || path[i] == '/')) && pattern.Regex.Match(currentPath).Success)
                 {
                     if (pattern.Target == PatternTarget.Directory)
                     {
-                        if (_fileSystem.Directory.Exists(_fileSystem.Path.Combine(_rootPath, currentPath)))
+                        if (_fileSystem.Directory.Exists(_fileSystem.Path.Combine(rootPath, currentPath)))
                             return true;
                     }
                     else
