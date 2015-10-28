@@ -1,18 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using GitIgnorer;
+using SevenZip;
 
 namespace srcbackup
 {
     public class Program
     {
-        private static FileSystem FileSystem = new FileSystem();
-        private static GitIgnoreCompiler GitIgnoreCompiler = new GitIgnoreCompiler(FileSystem);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern int GetDllDirectory(int bufsize, StringBuilder buf);
+
+        private static readonly FileSystem FileSystem = new FileSystem();
+        private static readonly GitIgnoreCompiler GitIgnoreCompiler = new GitIgnoreCompiler(FileSystem);
 
         public static void Main(string[] args)
         {
@@ -21,6 +27,8 @@ namespace srcbackup
                 Console.WriteLine("Usage: srcbackup.exe <source-directory> <output-zip-file>");
                 return;
             }
+
+            InitializeSevenZip();
 
             var rootPath = args[0].TrimEnd('\\', '/') + '\\';
             var zipPath = args[1];
@@ -32,9 +40,11 @@ namespace srcbackup
                 Directory.CreateDirectory(outputDirectory);
             }
 
+            Console.CursorVisible = false;
             var n = CreateZipArchive(files, rootPath, zipPath);
+            Console.CursorVisible = true;
 
-            Console.WriteLine("{0} files written to {1}.", n, zipPath);
+            WriteFullLine("{0} files written to {1}.", n, zipPath);
         }
 
         private static IEnumerable<string> GetFiles(string directory, GitIgnore gitIgnore)
@@ -49,7 +59,7 @@ namespace srcbackup
 
             var files = gitIgnore == null
                 ? Directory.GetFiles(directory)
-                : Directory.GetFiles(directory).Where(f => !gitIgnore.Ignores(f));
+                : Directory.GetFiles(directory).AsParallel().Where(f => !gitIgnore.Ignores(f)).ToArray();
 
             foreach (var file in files)
             {
@@ -58,7 +68,7 @@ namespace srcbackup
 
             var directories = gitIgnore == null
                 ? Directory.GetDirectories(directory)
-                : Directory.GetDirectories(directory).Where(d => !d.EndsWith(".git") && !gitIgnore.Ignores(d));
+                : Directory.GetDirectories(directory).AsParallel().Where(d => !d.EndsWith(".git") && !gitIgnore.Ignores(d)).ToArray();
 
             foreach (var file in directories.SelectMany(d => GetFiles(d, gitIgnore)))
             {
@@ -69,28 +79,33 @@ namespace srcbackup
         private static int CreateZipArchive(IEnumerable<string> files, string rootPath, string outputPath)
         {
             var n = 0;
-
-            using (var archive = new ZipArchive(new FileStream(outputPath, FileMode.Create), ZipArchiveMode.Create, false, Encoding.GetEncoding(850)))
+            var compressor = new SevenZipCompressor { ArchiveFormat = OutArchiveFormat.SevenZip, CompressionLevel = CompressionLevel.Fast };
+            compressor.FileCompressionStarted += (s, e) =>
             {
-                foreach (var file in files)
-                {
-                    if (file == outputPath)
-                        continue;
-
-                    var entry = archive.CreateEntry(file.Replace(rootPath, ""));
-                    using (var stream = entry.Open())
-                    {
-                        using (var dataStream = File.OpenRead(file))
-                        {
-                            dataStream.CopyTo(stream);
-                        }
-                    }
-
-                    n++;
-                }
-            }
+                WriteFullLine("[{0}%] {1}", e.PercentDone, e.FileName);
+                n++;
+            };
+            compressor.CompressFiles(outputPath, rootPath.Length, files.ToArray());
 
             return n;
+        }
+
+        private static void InitializeSevenZip()
+        {
+            if (ConfigurationManager.AppSettings.AllKeys.Contains("7zLocation"))
+                return;
+
+            var path = new StringBuilder(255);
+            GetDllDirectory(path.Capacity, path);
+            ConfigurationManager.AppSettings["7zLocation"] = Path.Combine(path.ToString(), IntPtr.Size == 8 ? "64" : "32", "7z.dll");
+        }
+
+        private static void WriteFullLine(string format, params object[] args)
+        {
+            var cursorPosition = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write("{0,-" + Console.WindowWidth + "}", String.Format(format, args));
+            Console.SetCursorPosition(0, cursorPosition);
         }
     }
 }
