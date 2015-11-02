@@ -44,7 +44,6 @@ namespace srcbackup
             sw.Stop();
 
             Console.WriteLine("{0} files written to {1} after {2}.", n, zipPath, sw.Elapsed.ToString(@"mm\mss\s"));
-            Console.ReadKey();
         }
 
         private static IEnumerable<string> GetFiles(string directory, GitIgnore gitIgnore)
