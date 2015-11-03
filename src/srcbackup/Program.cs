@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Abstractions;
 using System.IO.Compression;
@@ -17,17 +18,19 @@ namespace srcbackup
 
         public static void Main(string[] args)
         {
-            if (args.Length != 2)
+            if (args.Length < 2)
             {
-                Console.WriteLine("Usage: srcbackup.exe <source-directory> <output-zip-file>");
+                Console.WriteLine("Usage: srcbackup.exe <source-directory> <output-zip-file> [-t]");
                 return;
             }
 
-            var sw = Stopwatch.StartNew();
-
             var rootPath = args[0].TrimEnd('\\', '/') + '\\';
             var zipPath = args[1];
-            var files = GetFiles(rootPath, null);
+
+            if (args.Length == 3 && args[2].Equals("-t", StringComparison.InvariantCultureIgnoreCase))
+            {
+                zipPath = zipPath.Insert(zipPath.Length - 4, DateTime.Now.ToString("_yyyyMMddHHmmss", CultureInfo.InvariantCulture));
+            }
 
             var outputDirectory = Path.GetDirectoryName(zipPath);
             if(!string.IsNullOrEmpty(outputDirectory))
@@ -38,10 +41,10 @@ namespace srcbackup
             Console.Write("Creating archive for all files in \"{0}\" not ignored by GIT", rootPath);
 
             Console.CursorVisible = false;
-            var n = CreateZipArchive(files, rootPath, zipPath);
-            Console.CursorVisible = true;
-
+            var sw = Stopwatch.StartNew();
+            var n = CreateZipArchive(GetFiles(rootPath, null), rootPath, zipPath);
             sw.Stop();
+            Console.CursorVisible = true;
 
             Console.WriteLine("{0} files written to {1} after {2}.", n, zipPath, sw.Elapsed.ToString(@"mm\mss\s"));
         }
