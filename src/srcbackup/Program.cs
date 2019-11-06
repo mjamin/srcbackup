@@ -16,6 +16,11 @@ namespace srcbackup
         private static readonly FileSystem FileSystem = new FileSystem();
         private static readonly GitIgnoreCompiler GitIgnoreCompiler = new GitIgnoreCompiler(FileSystem);
 
+        static Program()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
         public static void Main(string[] args)
         {
             if (args.Length < 2)
@@ -33,7 +38,7 @@ namespace srcbackup
             }
 
             var outputDirectory = Path.GetDirectoryName(zipPath);
-            if(!string.IsNullOrEmpty(outputDirectory))
+            if (!string.IsNullOrEmpty(outputDirectory))
             {
                 Directory.CreateDirectory(outputDirectory);
             }
@@ -70,7 +75,7 @@ namespace srcbackup
 
             var directories = gitIgnore == null
                 ? Directory.GetDirectories(directory)
-                : Directory.GetDirectories(directory).AsParallel().Where(d => !d.EndsWith(".git") && !gitIgnore.Ignores(d)).ToArray();
+                : Directory.GetDirectories(directory).AsParallel().Where(d => !gitIgnore.Ignores(d)).ToArray();
 
             foreach (var file in directories.SelectMany(d => GetFiles(d, gitIgnore)))
             {
@@ -80,13 +85,13 @@ namespace srcbackup
 
         private static int CreateZipArchive(IEnumerable<string> files, string rootPath, string outputPath)
         {
+            var tmpOutputPath = outputPath + ".tmp";
             var n = 0;
-
-            using (var archive = new ZipArchive(new FileStream(outputPath, FileMode.Create), ZipArchiveMode.Create, false, Encoding.GetEncoding(850)))
+            using (var archive = new ZipArchive(new FileStream(tmpOutputPath, FileMode.Create), ZipArchiveMode.Create, false, Encoding.GetEncoding(850)))
             {
                 foreach (var file in files)
                 {
-                    if (file == outputPath)
+                    if (file == tmpOutputPath)
                         continue;
 
                     var entry = archive.CreateEntry(file.Replace(rootPath, ""), CompressionLevel.Fastest);
@@ -106,6 +111,11 @@ namespace srcbackup
                     }
                 }
             }
+
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+            
+            File.Move(tmpOutputPath, outputPath);
 
             Console.WriteLine();
 
