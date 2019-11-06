@@ -75,7 +75,7 @@ namespace srcbackup
 
             var directories = gitIgnore == null
                 ? Directory.GetDirectories(directory)
-                : Directory.GetDirectories(directory).AsParallel().Where(d => !d.EndsWith(".git") && !gitIgnore.Ignores(d)).ToArray();
+                : Directory.GetDirectories(directory).AsParallel().Where(d => !gitIgnore.Ignores(d)).ToArray();
 
             foreach (var file in directories.SelectMany(d => GetFiles(d, gitIgnore)))
             {
