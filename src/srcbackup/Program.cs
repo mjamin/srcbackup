@@ -112,6 +112,11 @@ namespace srcbackup
                 }
             }
 
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+            
+            File.Move(tmpOutputPath, outputPath);
+
             Console.WriteLine();
 
             return n;
